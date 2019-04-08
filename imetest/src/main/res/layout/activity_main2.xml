@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.csizg.imetest.MainActivity">
+    tools:context="com.csizg.imetest.autotouch.MainActivity2">
 
 
     <EditText
@@ -17,9 +17,38 @@
         tools:text="Name"/>
 
     <LinearLayout
+        android:id="@+id/ime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_below="@id/editText"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/niudun"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="牛盾"
+            android:onClick="onClick"/>
+        <Button
+            android:id="@+id/sougou"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="搜狗"
+            android:onClick="onClick"/>
+        <Button
+            android:id="@+id/baidu"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="百度"
+            android:onClick="onClick"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ime"
         android:orientation="horizontal">
 
         <Button

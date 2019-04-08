@@ -9,7 +9,7 @@ import android.util.Log;
 
 public class LogUtil {
 
-    private static boolean DEBUG = BuildConfig.DEBUG;
+    private static boolean DEBUG = true;
     public static boolean isLog = DEBUG;
 
     private static boolean LOGV = DEBUG;

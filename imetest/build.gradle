@@ -16,10 +16,30 @@ android {
 
     }
 
+    signingConfigs {
+        release {
+            storeFile file("XindunKeyStore.jks")
+            storePassword "xindun110"
+            keyAlias "NewShieldSafeHouse"
+            keyPassword "xindun110"
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+        debug {
+            storeFile file("XindunKeyStore.jks")
+            storePassword "xindun110"
+            keyAlias 'NewShieldSafeHouse'
+            keyPassword "xindun110"
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 

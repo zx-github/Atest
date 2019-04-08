@@ -1,46 +1,48 @@
-package com.csizg.imetest;
+package com.csizg.imetest.autotouch;
 
-import android.app.Instrumentation;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.csizg.imetest.FileUtils;
+import com.csizg.imetest.LogUtil;
+import com.csizg.imetest.R;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.Buffer;
+import java.util.List;
 
 /**
  * 1. 文件格式为UTF-8
  * 2. 文字以“/”分割，不要有空格
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity2 extends AppCompatActivity {
 
-    String TAG = MainActivity.class.getSimpleName();
-    Button startBt, fileBt, cancleBt;
+    String TAG = "xindun";
     String path;
     EditText editText;
+    RelativeLayout relativeLayout;
     boolean isCancle = false;
     File file;
+    List<float[]> list = XYtouch.getNiuDunFloatList();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main2);
 
         findViews();
         getData();
@@ -48,10 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void findViews() {
+        relativeLayout = findViewById(R.id.rl);
         editText = findViewById(R.id.editText);
-        startBt = findViewById(R.id.start);
-        fileBt = findViewById(R.id.file);
-        cancleBt = findViewById(R.id.cancle);
 
     }
 
@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         switch (view.getId()) {
             case R.id.start:
                 isCancle = false;
+                isCancle = false;
                 showGuide();
                 break;
 
@@ -79,15 +80,23 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(intent,1);
+                startActivityForResult(intent, 1);
                 break;
 
             case R.id.cancle:
                 isCancle = true;
                 break;
+            case R.id.niudun:
+                list = XYtouch.getNiuDunFloatList();
+                break;
+            case R.id.sougou:
+                list = XYtouch.getSouGouFloatList();
+                break;
+            case R.id.baidu:
+                list = XYtouch.getBaiDuFloatList();
+                break;
 
         }
-
 
     }
 
@@ -102,15 +111,13 @@ public class MainActivity extends AppCompatActivity {
                     if (path != null) {
                         file = new File(path);
                         if (file.exists()) {
-                            Toast.makeText(MainActivity.this, "选取文件成功", Toast.LENGTH_LONG);
+                            Toast.makeText(MainActivity2.this, "选取文件成功", Toast.LENGTH_LONG);
                         }
                     }
                 }
             }
         }
     }
-
-
 
 
     private void showGuide() {
@@ -126,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                     BufferedReader br = null;
                     try {
                         InputStreamReader read = new InputStreamReader(
-                                new FileInputStream(file),"UTF-8");//考虑到编码格式
+                                new FileInputStream(file), "UTF-8");//考虑到编码格式
                         br = new BufferedReader(read);
                         String readline = "";
                         while ((readline = br.readLine()) != null) {
@@ -152,12 +159,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 } else {
-                    typeIn("之后/94468");
+                    typeIn("之后/23456789");
                 }
-                // “旋转”的拼音
-                int[] keyCodeArray = new int[]{KeyEvent.KEYCODE_X, KeyEvent.KEYCODE_U, KeyEvent.KEYCODE_A, KeyEvent.KEYCODE_N, KeyEvent.KEYCODE_Z,
-                        KeyEvent.KEYCODE_H, KeyEvent.KEYCODE_U, KeyEvent.KEYCODE_A, KeyEvent.KEYCODE_N, KeyEvent.KEYCODE_SPACE};
-
             }
         }).start();
     }
@@ -167,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(MainActivity.this, "数据为空", Toast.LENGTH_LONG);
+                    Toast.makeText(MainActivity2.this, "数据为空", Toast.LENGTH_LONG);
                 }
             });
             return;
@@ -177,16 +180,20 @@ public class MainActivity extends AppCompatActivity {
         String number = split[1];
         int keycode = 0;
         for (int i = 0; i <= number.length(); i++) {
-            if (i == number.length()){
-                keycode = KeyEvent.KEYCODE_SPACE;
-            } else {
-                keycode = number.charAt(i) - 41;
-            }
             try {
-                Instrumentation inst = new Instrumentation();
-                inst.sendKeyDownUpSync(keycode);
-                Thread.sleep(50);
+                if (i == number.length()) {
+                    keycode = 1;
+                } else {
+                    keycode = number.charAt(i) - 48;
+                }
+
+                float[] floats = list.get(keycode - 1);
+
+                Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + floats[0] + " " + floats[1]});
+                Thread.sleep(200);
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -232,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-//                editText.setText("");
+                editText.setText("");
             }
         });
     }
