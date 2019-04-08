@@ -61,14 +61,14 @@ public class TouchActivity extends AppCompatActivity implements View.OnTouchList
         }
         return true;
     }
-    float data = 120;
+    float data = 20;
     private void typeIn() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 LogUtil.i("xindun", "typeIn", data + " , ");
                 try {
-                    Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + data + " " + 1010});
+                    Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + data + " " + 800});
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

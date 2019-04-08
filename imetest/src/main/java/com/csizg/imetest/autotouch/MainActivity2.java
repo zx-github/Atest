@@ -1,5 +1,6 @@
 package com.csizg.imetest.autotouch;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -7,6 +8,7 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -37,6 +39,7 @@ public class MainActivity2 extends AppCompatActivity {
     boolean isCancle = false;
     File file;
     List<float[]> list = XYtouch.getNiuDunFloatList();
+    String stringText;
 
 
     @Override
@@ -84,16 +87,23 @@ public class MainActivity2 extends AppCompatActivity {
                 break;
 
             case R.id.cancle:
-                isCancle = true;
+                if (isCancle){
+                    isCancle = false;
+                } else {
+                    isCancle = true;
+                }
                 break;
             case R.id.niudun:
                 list = XYtouch.getNiuDunFloatList();
+                ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
                 break;
             case R.id.sougou:
                 list = XYtouch.getSouGouFloatList();
+                ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
                 break;
             case R.id.baidu:
                 list = XYtouch.getBaiDuFloatList();
+                ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
                 break;
 
         }
@@ -159,7 +169,13 @@ public class MainActivity2 extends AppCompatActivity {
                         }
                     }
                 } else {
-                    typeIn("之后/23456789");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity2.this, "数据为空", Toast.LENGTH_LONG);
+                        }
+                    });
+                    typeIn("之后/98765432");
                 }
             }
         }).start();
@@ -179,32 +195,61 @@ public class MainActivity2 extends AppCompatActivity {
         String text = split[0];
         String number = split[1];
         int keycode = 0;
-        for (int i = 0; i <= number.length(); i++) {
-            try {
-                if (i == number.length()) {
-                    keycode = 1;
-                } else {
-                    keycode = number.charAt(i) - 48;
+        StringBuffer stringBuffer = new StringBuffer();
+        int time = 0;
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i <= number.length(); i++) {
+                try {
+                    if (i == number.length()) {
+                        keycode = j + 8;
+                    } else {
+                        keycode = number.charAt(i) - 50;
+                    }
+
+                    float[] floats = list.get(keycode);
+
+                    Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + floats[0] + " " + floats[1]});
+
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-
-                float[] floats = list.get(keycode - 1);
-
-                Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + floats[0] + " " + floats[1]});
-                Thread.sleep(200);
+            }
+            try {
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+            String string = editText.getText().toString();
+            if (TextUtils.isEmpty(string)){
+                continue;
+            }
+            stringBuffer.append(string);
+
+            if (text.equals(string)){
+                time = j + 1;
+            }
+            stringBuffer.append(", ");
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    editText.setText("");
+                }
+            });
         }
+        stringBuffer.append(String.valueOf(time));
+        stringText = stringBuffer.toString();
+        LogUtil.d(TAG, "typeIn", "stringText = " + stringText);
         writeFile();
 
     }
 
 
     private void writeFile() {
-        String string = editText.getText().toString();
-        if (TextUtils.isEmpty(string)) return;
+        if (TextUtils.isEmpty(stringText)) return;
         BufferedWriter bw = null;
         try {
 
@@ -220,7 +265,7 @@ public class MainActivity2 extends AppCompatActivity {
             bw = new BufferedWriter(new FileWriter(file, true));
 
             //使用缓冲区中的方法将数据写入到缓冲区中。
-            bw.write(string);
+            bw.write(stringText);
             bw.newLine();
             //使用缓冲区中的方法，将数据刷新到目的地文件中去。
             bw.flush();
@@ -235,13 +280,6 @@ public class MainActivity2 extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                editText.setText("");
-            }
-        });
     }
 
 }
