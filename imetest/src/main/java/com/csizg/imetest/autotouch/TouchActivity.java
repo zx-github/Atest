@@ -41,7 +41,6 @@ public class TouchActivity extends AppCompatActivity implements View.OnTouchList
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                startActivity(new Intent(TouchActivity.this, MainActivity2.class));
                 typeIn();
             }
         });

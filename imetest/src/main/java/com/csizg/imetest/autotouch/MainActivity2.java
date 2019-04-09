@@ -32,14 +32,19 @@ import java.util.List;
  */
 public class MainActivity2 extends AppCompatActivity {
 
+
+    static final String NIUDUN = "牛盾";
+    static final String SOUGOU = "搜狗";
+    static final String BAIDU = "百度";
     String TAG = "xindun";
     String path;
     EditText editText;
     RelativeLayout relativeLayout;
     boolean isCancle = false;
     File file;
-    List<float[]> list = XYtouch.getNiuDunFloatList();
+    List<float[]> list;
     String stringText;
+    String currentIme;
 
 
     @Override
@@ -75,7 +80,10 @@ public class MainActivity2 extends AppCompatActivity {
         switch (view.getId()) {
             case R.id.start:
                 isCancle = false;
-                isCancle = false;
+                if (TextUtils.isEmpty(currentIme) || list == null || list.size() <= 0) {
+                    Toast.makeText(MainActivity2.this, "请选择输入法", Toast.LENGTH_LONG).show();
+                    return;
+                }
                 showGuide();
                 break;
 
@@ -87,23 +95,24 @@ public class MainActivity2 extends AppCompatActivity {
                 break;
 
             case R.id.cancle:
-                if (isCancle){
-                    isCancle = false;
-                } else {
-                    isCancle = true;
-                }
+
+                isCancle = true;
+                Toast.makeText(MainActivity2.this, "请等10之后再开始", Toast.LENGTH_LONG).show();
                 break;
             case R.id.niudun:
                 list = XYtouch.getNiuDunFloatList();
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
+                currentIme = NIUDUN;
                 break;
             case R.id.sougou:
                 list = XYtouch.getSouGouFloatList();
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
+                currentIme = SOUGOU;
                 break;
             case R.id.baidu:
                 list = XYtouch.getBaiDuFloatList();
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
+                currentIme = BAIDU;
                 break;
 
         }
@@ -121,7 +130,7 @@ public class MainActivity2 extends AppCompatActivity {
                     if (path != null) {
                         file = new File(path);
                         if (file.exists()) {
-                            Toast.makeText(MainActivity2.this, "选取文件成功", Toast.LENGTH_LONG);
+                            Toast.makeText(MainActivity2.this, "选取文件成功", Toast.LENGTH_LONG).show();
                         }
                     }
                 }
@@ -135,7 +144,7 @@ public class MainActivity2 extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(800);
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
@@ -172,10 +181,10 @@ public class MainActivity2 extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(MainActivity2.this, "数据为空", Toast.LENGTH_LONG);
+                            Toast.makeText(MainActivity2.this, "未选择文件", Toast.LENGTH_LONG).show();
                         }
                     });
-                    typeIn("之后/98765432");
+                    typeIn("张旭/9426498");
                 }
             }
         }).start();
@@ -186,7 +195,7 @@ public class MainActivity2 extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(MainActivity2.this, "数据为空", Toast.LENGTH_LONG);
+                    Toast.makeText(MainActivity2.this, "数据为空", Toast.LENGTH_LONG).show();
                 }
             });
             return;
@@ -201,19 +210,37 @@ public class MainActivity2 extends AppCompatActivity {
             for (int i = 0; i <= number.length(); i++) {
                 try {
                     if (i == number.length()) {
-                        keycode = j + 8;
+                        float[] floats = list.get(8);
+                        float x = floats[0];
+                        int length = text.length();
+                        if (length < 2) {
+                            x = x / 2;
+                            x = x + (x * 2) * j;
+                        } else if (length == 2) {
+                            x = x + (x * 2) * j;
+                        } else if (length == 3) {
+                            x = x / 2 + x;
+                            x = x + (x * 2) * j;
+                        } else if (length == 4) {
+                            x = 2 * x;
+                            x = x + (x * 2) * j;
+                        }
+                        Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + x + " " + floats[1]});
                     } else {
                         keycode = number.charAt(i) - 50;
+                        float[] floats = list.get(keycode);
+                        Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + floats[0] + " " + floats[1]});
+
                     }
 
-                    float[] floats = list.get(keycode);
-
-                    Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + floats[0] + " " + floats[1]});
-
-                    Thread.sleep(300);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
+                    Thread.sleep(500);
+                } catch (Exception e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity2.this, "测试出现异常，请重新开始", Toast.LENGTH_LONG).show();
+                        }
+                    });
                     e.printStackTrace();
                 }
             }
@@ -223,12 +250,12 @@ public class MainActivity2 extends AppCompatActivity {
                 e.printStackTrace();
             }
             String string = editText.getText().toString();
-            if (TextUtils.isEmpty(string)){
+            if (TextUtils.isEmpty(string)) {
                 continue;
             }
             stringBuffer.append(string);
 
-            if (text.equals(string)){
+            if (text.equals(string)) {
                 time = j + 1;
             }
             stringBuffer.append(", ");
@@ -239,6 +266,11 @@ public class MainActivity2 extends AppCompatActivity {
                     editText.setText("");
                 }
             });
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         stringBuffer.append(String.valueOf(time));
         stringText = stringBuffer.toString();
@@ -252,8 +284,11 @@ public class MainActivity2 extends AppCompatActivity {
         if (TextUtils.isEmpty(stringText)) return;
         BufferedWriter bw = null;
         try {
-
-            File file = new File(path + "结果.txt");
+            if (TextUtils.isEmpty(currentIme)) {
+                LogUtil.e(TAG, "writeFile", "当前输入法为空");
+                return;
+            }
+            File file = new File(path + currentIme + ".txt");
             if (!file.isFile() || !file.exists()) {
                 file.createNewFile();
             }

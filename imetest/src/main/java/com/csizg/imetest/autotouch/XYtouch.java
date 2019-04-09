@@ -40,7 +40,7 @@ public class XYtouch {
         list.add(new float[]{500, 1090}); //9
         list.add(new float[]{60, 790}); //候选词1 两个字横坐标相差120
         list.add(new float[]{180, 790}); //候选词2
-        list.add(new float[]{240, 790}); //候选词3
+        list.add(new float[]{300, 790}); //候选词3
         return list;
     }
     //百度  横坐标相差140， 纵坐标相差100
@@ -56,7 +56,7 @@ public class XYtouch {
         list.add(new float[]{470, 1100}); //9
         list.add(new float[]{65, 800}); //候选词1  两个字横坐标相差130
         list.add(new float[]{195, 800}); //候选词2
-        list.add(new float[]{320, 800}); //候选词3
+        list.add(new float[]{325, 800}); //候选词3
         return list;
     }
 
