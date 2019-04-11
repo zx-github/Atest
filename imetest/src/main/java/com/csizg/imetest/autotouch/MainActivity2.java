@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
@@ -144,7 +145,7 @@ public class MainActivity2 extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(800);
+                    Thread.sleep(200);
                 } catch (InterruptedException e1) {
                     e1.printStackTrace();
                 }
@@ -160,11 +161,8 @@ public class MainActivity2 extends AppCompatActivity {
                                 break;
                             }
                             LogUtil.d(TAG, "typeIn", "readline = " + readline);
-                            typeIn(readline);
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e1) {
-                                e1.printStackTrace();
+                            if (!TextUtils.isEmpty(readline) && readline.length() > 2) {
+                                typeIn(readline);
                             }
                         }
                         br.close();
@@ -213,16 +211,8 @@ public class MainActivity2 extends AppCompatActivity {
                         float[] floats = list.get(8);
                         float x = floats[0];
                         int length = text.length();
-                        if (length < 2) {
-                            x = x / 2;
-                            x = x + (x * 2) * j;
-                        } else if (length == 2) {
-                            x = x + (x * 2) * j;
-                        } else if (length == 3) {
-                            x = x / 2 + x;
-                            x = x + (x * 2) * j;
-                        } else if (length == 4) {
-                            x = 2 * x;
+                        if(length > 1){
+                            x = length / 2 * x + (length % 2 == 0 ? 0 : x / 2);
                             x = x + (x * 2) * j;
                         }
                         Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + x + " " + floats[1]});
@@ -233,7 +223,7 @@ public class MainActivity2 extends AppCompatActivity {
 
                     }
 
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                 } catch (Exception e) {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -245,12 +235,12 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             }
             try {
-                Thread.sleep(1000);
+                Thread.sleep(800);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            String string = editText.getText().toString();
-            if (TextUtils.isEmpty(string)) {
+            String string = getEditString();
+            if (TextUtils.isEmpty(string)){
                 continue;
             }
             stringBuffer.append(string);
@@ -258,7 +248,7 @@ public class MainActivity2 extends AppCompatActivity {
             if (text.equals(string)) {
                 time = j + 1;
             }
-            stringBuffer.append(", ");
+            stringBuffer.append(",");
 
             runOnUiThread(new Runnable() {
                 @Override
@@ -267,7 +257,7 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             });
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -277,6 +267,34 @@ public class MainActivity2 extends AppCompatActivity {
         LogUtil.d(TAG, "typeIn", "stringText = " + stringText);
         writeFile();
 
+    }
+
+    int time = 0;
+    @NonNull
+    private String getEditString() {
+        String string = editText.getText().toString();
+        if (TextUtils.isEmpty(string)) {
+            if (time >= 3){
+                time = 0;
+                return "";
+            }
+            time++;
+            float[] floats = list.get(8);
+            try {
+                Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + (floats[0] / 2 ) + " " + floats[1]});
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                Thread.sleep(800);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            getEditString();
+        } else {
+            time = 0;
+        }
+        return string;
     }
 
 
