@@ -1,5 +1,6 @@
 package com.csizg.imetest.autotouch;
 
+import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,6 +9,7 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -38,28 +40,35 @@ public class MainActivity2 extends AppCompatActivity {
     static final String SOUGOU = "搜狗";
     static final String BAIDU = "百度";
     String TAG = "xindun";
-    String path;
-    EditText editText;
-    RelativeLayout relativeLayout;
-    boolean isCancle = false;
-    File file;
-    List<float[]> list;
-    String stringText;
-    String currentIme;
+    static String path;
+    static EditText editText;
+    static boolean isCancle = false;
+    static File file;
+    static List<float[]> list;
+    static String stringText;
+    static String currentIme;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
         findViews();
         getData();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
 
     private void findViews() {
-        relativeLayout = findViewById(R.id.rl);
         editText = findViewById(R.id.editText);
 
     }
@@ -144,11 +153,6 @@ public class MainActivity2 extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                }
                 if (file != null) {
                     BufferedReader br = null;
                     try {
@@ -163,6 +167,12 @@ public class MainActivity2 extends AppCompatActivity {
                             LogUtil.d(TAG, "typeIn", "readline = " + readline);
                             if (!TextUtils.isEmpty(readline) && readline.length() > 2) {
                                 typeIn(readline);
+                            }
+
+                            try {
+                                Thread.sleep(800);
+                            } catch (InterruptedException e1) {
+                                e1.printStackTrace();
                             }
                         }
                         br.close();
@@ -215,6 +225,9 @@ public class MainActivity2 extends AppCompatActivity {
                             x = length / 2 * x + (length % 2 == 0 ? 0 : x / 2);
                             x = x + (x * 2) * j;
                         }
+                        if (x > 500){
+                            x = 500;
+                        }
                         Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + x + " " + floats[1]});
                     } else {
                         keycode = number.charAt(i) - 50;
@@ -223,7 +236,7 @@ public class MainActivity2 extends AppCompatActivity {
 
                     }
 
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                 } catch (Exception e) {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -235,12 +248,13 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             }
             try {
-                Thread.sleep(800);
+                Thread.sleep(1200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             String string = getEditString();
             if (TextUtils.isEmpty(string)){
+                setEnpty();
                 continue;
             }
             stringBuffer.append(string);
@@ -250,17 +264,7 @@ public class MainActivity2 extends AppCompatActivity {
             }
             stringBuffer.append(",");
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    editText.setText("");
-                }
-            });
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            setEnpty();
         }
         stringBuffer.append(String.valueOf(time));
         stringText = stringBuffer.toString();
@@ -269,30 +273,33 @@ public class MainActivity2 extends AppCompatActivity {
 
     }
 
-    int time = 0;
+    private void setEnpty() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                LogUtil.e(TAG, "setEnpty", "editText.setText(\"\")" );
+                editText.setText("");
+            }
+        });
+    }
+
     @NonNull
     private String getEditString() {
         String string = editText.getText().toString();
+        LogUtil.e(TAG, "getEditString", "string == " + string);
         if (TextUtils.isEmpty(string)) {
-            if (time >= 3){
-                time = 0;
-                return "";
-            }
-            time++;
-            float[] floats = list.get(8);
+            float[] floats = list.get(11);
             try {
-                Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + (floats[0] / 2 ) + " " + floats[1]});
+                Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + floats[0] + " " + floats[1]});
             } catch (IOException e) {
                 e.printStackTrace();
             }
             try {
-                Thread.sleep(800);
+                Thread.sleep(1100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            getEditString();
-        } else {
-            time = 0;
+            string = editText.getText().toString();
         }
         return string;
     }

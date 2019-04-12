@@ -67,7 +67,7 @@ public class TouchActivity extends AppCompatActivity implements View.OnTouchList
             public void run() {
                 LogUtil.i("xindun", "typeIn", data + " , ");
                 try {
-                    Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + data + " " + 800});
+                    Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + 620 + " " + 1210});
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
