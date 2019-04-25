@@ -1,5 +1,6 @@
 package com.csizg.imetest.autotouch;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,17 @@ import java.util.List;
  */
 
 public class XYtouch {
+
+    static int hangLength = 0;
+    static final String NIUDUN = "牛盾";
+    static final String SOUGOU = "搜狗";
+    static final String BAIDU = "百度";
+    static String path;
+    static boolean isCancle = false;
+    static File file;
+    static List<float[]> list;
+    static String stringText;
+    static String currentIme;
 
     //牛盾  横坐标相差140， 纵坐标相差100
     public static List<float[]> getNiuDunFloatList() {

@@ -1,6 +1,5 @@
 package com.csizg.imetest.autotouch;
 
-import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,11 +8,9 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.csizg.imetest.FileUtils;
@@ -23,11 +20,9 @@ import com.csizg.imetest.R;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
 
 /**
  * 1. 文件格式为UTF-8
@@ -36,17 +31,8 @@ import java.util.List;
 public class MainActivity2 extends AppCompatActivity {
 
 
-    static final String NIUDUN = "牛盾";
-    static final String SOUGOU = "搜狗";
-    static final String BAIDU = "百度";
-    String TAG = "xindun";
-    static String path;
     static EditText editText;
-    static boolean isCancle = false;
-    static File file;
-    static List<float[]> list;
-    static String stringText;
-    static String currentIme;
+    String TAG = "xindun";
 
 
     @Override
@@ -63,8 +49,10 @@ public class MainActivity2 extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onPause() {
+        super.onPause();
+        XYtouch.isCancle = true;
+        Toast.makeText(MainActivity2.this, "请等10之后再开始", Toast.LENGTH_LONG).show();
 
     }
 
@@ -74,8 +62,8 @@ public class MainActivity2 extends AppCompatActivity {
     }
 
     private void getData() {
-        path = Environment.getExternalStorageDirectory().getPath() + File.separator + "xindun" + File.separator;
-        File file = new File(path);
+        XYtouch.path = Environment.getExternalStorageDirectory().getPath() + File.separator + "xindun" + File.separator;
+        File file = new File(XYtouch.path);
         try {
             if (!file.exists()) {
                 file.mkdir();
@@ -89,8 +77,8 @@ public class MainActivity2 extends AppCompatActivity {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.start:
-                isCancle = false;
-                if (TextUtils.isEmpty(currentIme) || list == null || list.size() <= 0) {
+                XYtouch.isCancle = false;
+                if (TextUtils.isEmpty(XYtouch.currentIme) || XYtouch.list == null || XYtouch.list.size() <= 0) {
                     Toast.makeText(MainActivity2.this, "请选择输入法", Toast.LENGTH_LONG).show();
                     return;
                 }
@@ -106,23 +94,26 @@ public class MainActivity2 extends AppCompatActivity {
 
             case R.id.cancle:
 
-                isCancle = true;
+                XYtouch.isCancle = true;
                 Toast.makeText(MainActivity2.this, "请等10之后再开始", Toast.LENGTH_LONG).show();
                 break;
             case R.id.niudun:
-                list = XYtouch.getNiuDunFloatList();
+                XYtouch.list = XYtouch.getNiuDunFloatList();
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
-                currentIme = NIUDUN;
+                XYtouch.currentIme = XYtouch.NIUDUN;
+                XYtouch.hangLength = 0;
                 break;
             case R.id.sougou:
-                list = XYtouch.getSouGouFloatList();
+                XYtouch.list = XYtouch.getSouGouFloatList();
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
-                currentIme = SOUGOU;
+                XYtouch.currentIme = XYtouch.SOUGOU;
+                XYtouch.hangLength = 0;
                 break;
             case R.id.baidu:
-                list = XYtouch.getBaiDuFloatList();
+                XYtouch.list = XYtouch.getBaiDuFloatList();
                 ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).showInputMethodPicker();
-                currentIme = BAIDU;
+                XYtouch.currentIme = XYtouch.BAIDU;
+                XYtouch.hangLength = 0;
                 break;
 
         }
@@ -138,8 +129,8 @@ public class MainActivity2 extends AppCompatActivity {
                 if (uri != null) {
                     String path = FileUtils.getPath(this, uri);
                     if (path != null) {
-                        file = new File(path);
-                        if (file.exists()) {
+                        XYtouch.file = new File(path);
+                        if (XYtouch.file.exists()) {
                             Toast.makeText(MainActivity2.this, "选取文件成功", Toast.LENGTH_LONG).show();
                         }
                     }
@@ -153,17 +144,18 @@ public class MainActivity2 extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if (file != null) {
+                if (XYtouch.file != null) {
                     BufferedReader br = null;
                     try {
-                        InputStreamReader read = new InputStreamReader(
-                                new FileInputStream(file), "UTF-8");//考虑到编码格式
-                        br = new BufferedReader(read);
+                        br = new BufferedReader(new FileReader(XYtouch.file));
                         String readline = "";
+                        LogUtil.d(TAG, "typeIn", "hangLength = " + XYtouch.hangLength);
+                        br.skip(XYtouch.hangLength);
                         while ((readline = br.readLine()) != null) {
-                            if (isCancle) {
+                            if (XYtouch.isCancle) {
                                 break;
                             }
+                            XYtouch.hangLength += readline.length();
                             LogUtil.d(TAG, "typeIn", "readline = " + readline);
                             if (!TextUtils.isEmpty(readline) && readline.length() > 2) {
                                 typeIn(readline);
@@ -175,15 +167,15 @@ public class MainActivity2 extends AppCompatActivity {
                                 e1.printStackTrace();
                             }
                         }
-                        br.close();
+//                        br.close();
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
-                        try {
-                            br.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+//                        try {
+//                            br.close();
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
                     }
                 } else {
                     runOnUiThread(new Runnable() {
@@ -208,32 +200,42 @@ public class MainActivity2 extends AppCompatActivity {
             });
             return;
         }
+        if (!str.contains("/")) {
+            return;
+        }
         String[] split = str.split("/");
         String text = split[0];
         String number = split[1];
         int keycode = 0;
         StringBuffer stringBuffer = new StringBuffer();
         int time = 0;
+
         for (int j = 0; j < 3; j++) {
+            boolean clock = false;
             for (int i = 0; i <= number.length(); i++) {
                 try {
                     if (i == number.length()) {
-                        float[] floats = list.get(8);
+                        float[] floats = XYtouch.list.get(8);
                         float x = floats[0];
                         int length = text.length();
-                        if(length > 1){
+                        if (length > 1) {
                             x = length / 2 * x + (length % 2 == 0 ? 0 : x / 2);
                             x = x + (x * 2) * j;
                         }
-                        if (x > 500){
+                        if (x > 500) {
                             x = 500;
                         }
-                        Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + x + " " + floats[1]});
+
+                        if (clock) {
+                            clock = clock(x, floats[1]);
+                        } else {
+                            floats = XYtouch.list.get(11);
+                            clock = clock(floats[0], floats[1]);
+                        }
                     } else {
                         keycode = number.charAt(i) - 50;
-                        float[] floats = list.get(keycode);
-                        Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + floats[0] + " " + floats[1]});
-
+                        float[] floats = XYtouch.list.get(keycode);
+                        clock = clock(floats[0], floats[1]);
                     }
 
                     Thread.sleep(200);
@@ -248,28 +250,49 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             }
             try {
-                Thread.sleep(1200);
+                Thread.sleep(1500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            String string = getEditString();
-            if (TextUtils.isEmpty(string)){
+            String string = getEditString(clock);
+            if (TextUtils.isEmpty(string)) {
                 setEnpty();
                 continue;
             }
             stringBuffer.append(string);
 
             if (text.equals(string)) {
-                time = j + 1;
+                if (time == 0) {
+                    time = j + 1;
+                }
             }
             stringBuffer.append(",");
 
             setEnpty();
         }
         stringBuffer.append(String.valueOf(time));
-        stringText = stringBuffer.toString();
-        LogUtil.d(TAG, "typeIn", "stringText = " + stringText);
+        XYtouch.stringText = stringBuffer.toString();
+        LogUtil.d(TAG, "typeIn", "stringText = " + XYtouch.stringText);
         writeFile();
+
+    }
+
+    private boolean clock(float x, float y){
+//        try {
+//            Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + x + " " + y});
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        // 利用ProcessBuilder执行shell命令
+        String[] order = {"su", "-c", "input", "tap", "" + x, "" + y };
+        try {
+            new ProcessBuilder(order).start();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
 
     }
 
@@ -277,43 +300,53 @@ public class MainActivity2 extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                LogUtil.e(TAG, "setEnpty", "editText.setText(\"\")" );
+                LogUtil.e(TAG, "setEnpty", "editText.setText(\"\")");
                 editText.setText("");
             }
         });
     }
 
     @NonNull
-    private String getEditString() {
+    private String getEditString(boolean isClock) {
         String string = editText.getText().toString();
         LogUtil.e(TAG, "getEditString", "string == " + string);
         if (TextUtils.isEmpty(string)) {
-            float[] floats = list.get(11);
-            try {
-                Runtime.getRuntime().exec(new String[]{"su", "-c", "input tap " + floats[0] + " " + floats[1]});
-            } catch (IOException e) {
-                e.printStackTrace();
+            float[] floats = XYtouch.list.get(11);
+            if (!isClock){
+                clock(floats[0], floats[1]);
+            } else {
+                boolean clock = clock(100, 800);
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (clock && !XYtouch.isCancle) {
+                    getEditString(isClock);
+                } else {
+                    clock(floats[0], floats[1]);
+                    try {
+                        Thread.sleep(1100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    string = editText.getText().toString();
+                }
             }
-            try {
-                Thread.sleep(1100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            string = editText.getText().toString();
         }
         return string;
     }
 
 
     private void writeFile() {
-        if (TextUtils.isEmpty(stringText)) return;
+        if (TextUtils.isEmpty(XYtouch.stringText)) return;
         BufferedWriter bw = null;
         try {
-            if (TextUtils.isEmpty(currentIme)) {
+            if (TextUtils.isEmpty(XYtouch.currentIme)) {
                 LogUtil.e(TAG, "writeFile", "当前输入法为空");
                 return;
             }
-            File file = new File(path + currentIme + ".txt");
+            File file = new File(XYtouch.path + XYtouch.currentIme + ".txt");
             if (!file.isFile() || !file.exists()) {
                 file.createNewFile();
             }
@@ -325,7 +358,7 @@ public class MainActivity2 extends AppCompatActivity {
             bw = new BufferedWriter(new FileWriter(file, true));
 
             //使用缓冲区中的方法将数据写入到缓冲区中。
-            bw.write(stringText);
+            bw.write(XYtouch.stringText);
             bw.newLine();
             //使用缓冲区中的方法，将数据刷新到目的地文件中去。
             bw.flush();
